@@ -1,1 +1,225 @@
 # mrfzynx
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>明日方舟乙女向</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #fae4e6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+        
+        .container {
+            border: 3px solid #e67e8d;
+            border-radius: 12px;
+            background-color: #fff;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1 {
+            color: #e67e8d;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            flex-shrink: 0;
+        }
+        
+        .name-setup {
+            background-color: #fef7f7;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 2px solid #fae4e6;
+            flex-shrink: 0;
+        }
+        
+        .name-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #fae4e6;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        
+        input:focus {
+            border-color: #e67e8d;
+        }
+        
+        button {
+            background-color: #e67e8d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background-color: #d16274;
+        }
+        
+        .game-container {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .game-info {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e67e8d;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #fef7f7;
+            border-radius: 8px;
+            border: 2px solid #fae4e6;
+            flex-shrink: 0;
+        }
+        
+        .dialogue-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #fefafa;
+            border-radius: 10px;
+            border: 2px solid #fae4e6;
+            margin-bottom: 15px;
+            min-height: 300px;
+        }
+        
+        /* 自定义滚动条 */
+        .dialogue-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .dialogue-area::-webkit-scrollbar-track {
+            background: #fae4e6;
+            border-radius: 10px;
+        }
+        
+        .dialogue-area::-webkit-scrollbar-thumb {
+            background: #e67e8d;
+            border-radius: 10px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            max-width: 85%;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .npc-message {
+            background-color: #f9f3f4;
+            border-left: 4px solid #e67e8d;
+            margin-right: auto;
+        }
+        
+        .player-message {
+            background-color: #fae4e6;
+            border-right: 4px solid #e67e8d;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .character-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #d16274;
+        }
+        
+        /* 已选择的选项样式 */
+        .selected-option {
+            background-color: #fae4e6;
+            border: 2px solid #e67e8d;
+            color: #d16274;
+            font-weight: bold;
+            margin-bottom: 8px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-style: italic;
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        /* 自动跳转提示 */
+        .auto-next-hint {
+            background-color: #f0f8ff;
+            border: 2px solid #87ceeb;
+            color: #4682b4;
+            margin-bottom: 8px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* 选项区域 */
+        .options-area {
+            background-color: #fef7f7;
+            border-radius: 10px;
+            border: 2px solid #fae4e6;
+            padding: 15px;
+            flex-shrink: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .options-area.hidden {
+            display: none;
+        }
+        
+        .options-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .options-area::-webkit-scrollbar-track {
+            background: #fae4e6;
+            border-radius: 10px;
