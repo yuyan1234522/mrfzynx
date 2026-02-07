@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字对话游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #fae4e6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+        
+        .container {
+            border: 3px solid #e67e8d;
+            border-radius: 12px;
+            background-color: #fff;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1 {
+            color: #e67e8d;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            flex-shrink: 0;
+        }
+        
+        .name-setup {
+            background-color: #fef7f7;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 2px solid #fae4e6;
+            flex-shrink: 0;
+        }
+        
+        .name-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #fae4e6;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        
+        input:focus {
+            border-color: #e67e8d;
+        }
+        
+        button {
+            background-color: #e67e8d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background-color: #d16274;
+        }
+        
+        .game-container {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .game-info {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e67e8d;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #fef7f7;
+            border-radius: 8px;
+            border: 2px solid #fae4e6;
+            flex-shrink: 0;
+        }
+        
+        .dialogue-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #fefafa;
+            border-radius: 10px;
+            border: 2px solid #fae4e6;
+            margin-bottom: 15px;
+            min-height: 300px;
+        }
+        
+        /* 自定义滚动条 */
+        .dialogue-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .dialogue-area::-webkit-scrollbar-track {
+            background: #fae4e6;
+            border-radius: 10px;
+        }
+        
+        .dialogue-area::-webkit-scrollbar-thumb {
+            background: #e67e8d;
+            border-radius: 10px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            max-width: 85%;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .npc-message {
+            background-color: #f9f3f4;
+            border-left: 4px solid #e67e8d;
+            margin-right: auto;
+        }
+        
+        .player-message {
+            background-color: #fae4e6;
+            border-right: 4px solid #e67e8d;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .character-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #d16274;
+        }
+        
+        /* 已选择的选项样式 */
+        .selected-option {
+            background-color: #fae4e6;
+            border: 2px solid #e67e8d;
+            color: #d16274;
+            font-weight: bold;
+            margin-bottom: 8px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-style: italic;
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        /* 自动跳转提示 */
+        .auto-next-hint {
+            background-color: #f0f8ff;
+            border: 2px solid #87ceeb;
+            color: #4682b4;
+            margin-bottom: 8px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* 选项区域 */
+        .options-area {
+            background-color: #fef7f7;
+            border-radius: 10px;
+            border: 2px solid #fae4e6;
+            padding: 15px;
+            flex-shrink: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .options-area.hidden {
+            display: none;
+        }
+        
+        .options-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .options-area::-webkit-scrollbar-track {
+            background: #fae4e6;
+            border-radius: 10px;
+        }
+        
+        .options-area::-webkit-scrollbar-thumb {
+            background: #e67e8d;
+            border-radius: 10px;
+        }
+        
+        .option-btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 8px;
+            text-align: left;
+            background-color: #fff;
+            border: 2px solid #fae4e6;
+            color: #333;
+            transition: all 0.3s;
+            padding: 12px 15px;
+        }
+        
+        .option-btn:hover {
+            background-color: #fae4e6;
+            border-color: #e67e8d;
+            transform: translateX(5px);
+        }
+        
+        .option-btn:last-child {
+            margin-bottom: 0;
+        }
+        
+        .options-label {
+            color: #e67e8d;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .options-label:before {
+            content: "▼";
+            font-size: 12px;
+        }
+        
+        /* 自动剧情标记 */
+        .auto-story-marker {
+            background-color: #f5f5f5;
+            border: 1px dashed #ccc;
+            color: #999;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            margin: 5px 0;
+        }
+        
+        /* 响应式设计 */
+        @media (max-height: 700px) {
+            .container {
+                height: 90vh;
+                padding: 15px;
+            }
+            
+            .dialogue-area {
+                min-height: 200px;
+            }
+            
+            .options-area {
+                max-height: 150px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+                height: 95vh;
+            }
+            
+            .name-input {
+                flex-direction: column;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+            
+            .option-btn {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+     <div class="container">
+        <h1>明日方舟乙女向</h1>
+        
+        <div class="name-setup">
+            <p>此篇为望情人节故事线</p>
+            <div class="name-input">
+                <button id="startGame">请享用</button>
+            </div>
+        </div>
+        
+        <div class="game-container" id="gameContainer">
+            <div class="dialogue-area" id="dialogueArea">
+                <!-- 对话内容将在这里动态生成 -->
+            </div>
+            
+            <div class="options-area" id="optionsArea">
+                <div class="options-label">请选择你的行动：</div>
+                <!-- 选项按钮将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let gameState = {
+            playerName: "你",
+            currentScene: "start",
+            lastOptionText: "", // 记录上一次选择的选项文本
+            scenes: {}
+        };
+        
+        // 游戏场景数据
+        function initGameScenes() {
+            gameState.scenes = {
+                start: {
+                    message: "冬日暖阳，湖心亭中。你和望对坐在棋盘前，百无聊赖地下着棋。",
+                    options: [
+                        { text: "你赢了。", nextScene: "player1" },
+                        { text: "你输了。", nextScene: "wang1" },
+                    ]
+                },
+                player1: {
+                    message: "你赢了，他依旧想像以前一样直接掀棋盘走人。却被你危险的眼神震慑，最后只是捻起几枚自己幻化出的旗子，一把扔向旁边的湖水中。你不屑地发出“嘁”的声音，望毫无威慑性地抬眼看了你一眼，起身就要走人，却被你一把拉住脖子上的丝带拉至身前脸贴着脸。你：“什么臭脾气，下棋输了就跑，谁惯的你”",
+                      options: [  
+                        { text: "继续剧情。", nextScene: "juqing1" },
+                    ]
+                },
+                wang1: {
+                    message: "你输了，他虽面上不显，但姿势却放松的后靠，吐出四个字：“资质平平”……你把棋盘掀了，旗子噼里啪啦落了他满身。你转身就想走，却发现通往岸边的棋子被望移走了。他缓缓地靠近你的后背，说：“不是悔棋就是掀棋盘，谁惯的你。”",
+                    autoNext: "juqing1", 
+                    options: [  
+                        { text: "继续剧情。", nextScene: "juqing1" },
+                    ]
+                },
+                juqing1: {
+                    message: "临近晌午，你的肚子咕咕作响。你和望对视一眼，同时看向了厨房。",
+                    options: [
+                        { text: "你会做饭。", nextScene: "player2" },
+                        { text: "你不会做饭。", nextScene: "wang2" } 
+                    ]
+                },
+                
+                player2: {
+                    message: "你确实会做饭，于是你便以“厨子做饭没人可以闲着”为理由，指挥他做这做那。指挥之精妙，比你抄ex关的作业还要浑然天成。于是望就这样顶着他那头被你吐槽：“像破布条子”的头发，在厨房里不是给土豆削皮就是洗菜叶子，时不时地还得把头发别到脑后，看的你直乐呵。你戏谑的凑到他跟前，说：“你求求我，我就给你把头发绑起来”望的回答是把你的头发也弄乱……他被你一脚踢出去了。",
+                    autoNext: "juqing2",
+                    options: [
+                        { text: "继续剧情。", nextScene: "juqing2" },
+                    ]
+                },
+                wang2: {
+                    message: "你和望面面相觑，都从对方的眼中看到了几个字：“看我干嘛？”望无奈的起身，拉着你找到了最小的幺弟——余。余一边絮絮叨叨的吐槽你们两个没一个省心的，一边老老实实的去给你们做饭。你和望舒坦的躺在躺椅上，你顺手摸了摸他手感不错的小腹，说：“诶，你最近是不是被小余喂胖了一点”……余忍无可忍的出来大喊：“你们要打出去打！”",
+                    autoNext: "juqing2",
+                    options: [
+                        { text: "继续剧情。", nextScene: "juqing2" },
+                    ]
+                },
+                juqing2: {
+                    message: "夜幕降临，你和望坐在院子里，你还在处理每天的游戏日常，望闲的没事干在下棋。",
+                    options: [
+                        { text: "你比望能熬。", nextScene: "player3" },
+                        { text: "你没有望能熬夜。", nextScene: "wang3" },
+                    ]
+                },
+                player3: {
+                    message: "你身为究极夜猫子，做完游戏日常还有无数事情等着你去做，所以当你正抱着手机玩的不亦乐乎的时候，望突然一把夺过你的手机，把自己的脑袋放到你的大腿上，然后再把手机还给你。他做的这一系列活动是如此的丝滑，根本没有任何卡顿或者不连贯，直接给你看傻了。等你反应过来的时候，不仅游戏里操控的小人死了，望也睡着了。你无奈，只能给他编好几个冲天辫泄愤。",
+                    options: [
+                        { text: "继续剧情。", nextScene: "juqing3" },
+                    ]
+                },
+                wang3: {
+                    message: "做完每天的游戏日常下线后，你就打了个哈欠，伸了伸懒腰，看了眼望的棋局。此龙还在和PRTS决一死战，看起来离睡觉还早。于是你放心的靠着望的肩膀，睡着了。醒来是被腰间沉重的手臂给压醒的，你翻过身，看到的就是望疲惫的脸色和沉重的黑眼圈。再一看PRTS的记录，哦吼，一局没赢。",
+                    options: [
+                      { text: "继续剧情。", nextScene: "juqing3" },
+                    ]
+                },
+                juqing3: {
+                    message: "日头正好，阳光明媚，黍来到你和望的小院邀请你们一起出去玩。",
+                    options: [
+                        { text: "你选择出去玩。", nextScene: "player4" },
+                        { text: "你也不喜欢出去玩。", nextScene: "wang4" },
+                    ]
+                },
+                player4: {
+                    message: "如此良辰美景，还有佳人相伴，你自然是要去的。望没说什么，只是默默收拾东西，跟上了你和黍。你和黍走在最前头，聊着最近发生的趣事。望缓慢的跟在你们后面，已经和你们拉开了起码半里地的距离。你回头，才发现望已经变成一个小黑点。等你赶到他身边的时候，他已经坐在石头上满头大汗了。你思考了一下抱着他走的可能性，最终决定一屁股坐在他旁边，把出去玩改成野餐了。",
+                    options: [
+                        { text: "继续剧情。", nextScene: "juqing4" },
+                    ]
+                },
+                wang4: {
+                    message: "你遗憾的拒绝了黍。黍就这样念叨着你们两个要多出去走走，顺便放下了自己准备的大荒的新产品，一步三回头的走了。你和望对视一眼，你欢呼一声，抱着黍带来的什么土豆脆片，各种水果干，和望肩并肩躺在摇椅上，宅在家中度过了一下午的美好时光。",
+                    options: [
+                        { text: "继续剧情。", nextScene: "juqing4" },
+                    ]
+                },
+                juqing4: {
+                    message: "说到吃的，就不得不提你和望的口味了。",
+                    options: [
+                        { text: "你喜欢咸口。", nextScene: "xian5" },
+                        { text: "你喜欢甜口。", nextScene: "tian5" },
+                        { text: "你喜欢辣口。", nextScene: "la5" },
+                        { text: "你喜欢苦口。", nextScene: "ku5" },
+                    ]
+                },
+                xian5: {
+                    message: "望对此接受良好，你们在口味上达成了非常完美的共识，就连点菜的时候都点的一模一样。",
+                    options: [
+                        { text: "继续剧情", nextScene: "juqing6" },
+                    ]
+                },
+                tian5: {
+                    message: "望对此只能说是接受，但不那么喜欢。不过你时常会把吃不完的甜品扔给他解决，他也就习惯了。",
+                    options: [
+                        { text: "继续剧情", nextScene: "juqing6" },
+                    ]
+                },
+                la5: {
+                    message: "望是能吃辣的，但是方明令禁止他吃任何辛辣食品。于是每次你吃辣的时候都恨不得放在望的鼻子底下馋他。望也总会用各种手段报复回来。",
+                    options: [
+                        { text: "继续剧情", nextScene: "juqing6" },
+                    ]
+                },
+                ku5: {
+                    message: "望是不喜欢苦的，这会让他想到他喝的那些药。所以每次你吃苦菜时，他总会给你准备一杯糖水，即使你并不需要。",
+                    options: [
+                        { text: "继续剧情", nextScene: "juqing6" },
+                    ]
+                },
+            };
+        }
+        
+        // 初始化游戏
+        function initGame() {
+            initGameScenes();
+            
+            // 获取DOM元素
+            const startGameBtn = document.getElementById('startGame');
+            const gameContainer = document.getElementById('gameContainer');
+            const dialogueArea = document.getElementById('dialogueArea');
+            const optionsArea = document.getElementById('optionsArea');
+            
+            // 开始游戏按钮点击事件
+            startGameBtn.addEventListener('click', function() {
+                gameContainer.style.display = 'flex';
+                document.querySelector('.name-setup').style.display = 'none';
+                loadScene('start');
+            });
+            
+            // 加载场景
+            function loadScene(sceneId) {
+                const scene = gameState.scenes[sceneId];
+                if (!scene) {
+                    addMessage("故事还在开发中...", "系统", false);
+                    addOption({ text: "重新开始", nextScene: "start" });
+                    return;
+                }
+                
+                // 如果上次有选择选项，显示选择记录
+                if (gameState.lastOptionText && sceneId !== "start") {
+                    addSelectedOption(gameState.lastOptionText);
+                }
+                
+                gameState.currentScene = sceneId;
+                
+                // 添加消息
+                addMessage(scene.message, "", false);
+                
+                // 清除旧选项
+                optionsArea.innerHTML = '<div class="options-label">请选择你的行动：</div>';
+                
+                // 如果有选项，显示选项区域
+                if (scene.options && scene.options.length > 0) {
+                    optionsArea.classList.remove('hidden');
+                    
+                    // 添加新选项
+                    scene.options.forEach(option => {
+                        addOption(option);
+                    });
+                }
+                
+                // 滚动到最新消息
+                dialogueArea.scrollTop = dialogueArea.scrollHeight;
+            }
+            
+            // 添加消息到对话区域
+            function addMessage(text, character, isPlayer = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isPlayer ? 'player-message' : 'npc-message'}`;
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'character-name';
+                nameDiv.textContent = isPlayer ? gameState.playerName : character;
+                
+                const textDiv = document.createElement('div');
+                textDiv.textContent = text;
+                
+                messageDiv.appendChild(nameDiv);
+                messageDiv.appendChild(textDiv);
+                
+                dialogueArea.appendChild(messageDiv);
+                
+                // 如果消息太多，移除最早的消息
+                const messages = dialogueArea.querySelectorAll('.message');
+                if (messages.length > 15) {
+                    messages[0].remove();
+                }
+            }
+            
+            // 添加已选择的选项记录
+            function addSelectedOption(optionText) {
+                const selectedDiv = document.createElement('div');
+                selectedDiv.className = 'selected-option';
+                selectedDiv.innerHTML = `<strong>${gameState.playerName}选择：</strong>${optionText}`;
+                
+                dialogueArea.appendChild(selectedDiv);
+                
+                // 如果消息太多，移除最早的消息
+                const messages = dialogueArea.querySelectorAll('.message, .selected-option');
+                if (messages.length > 15) {
+                    messages[0].remove();
+                }
+            }
+            
+            // 添加自动跳转提示
+            function addAutoNextHint(delay) {
+                const hint = document.createElement('div');
+                hint.className = 'auto-next-hint';
+                hint.textContent = `⏱️ ${delay/1000}秒后继续剧情...`;
+                dialogueArea.appendChild(hint);
+                dialogueArea.scrollTop = dialogueArea.scrollHeight;
+                
+                // 自动移除提示
+                setTimeout(() => {
+                    if (hint.parentNode) {
+                        hint.remove();
+                    }
+                }, delay);
+            }
+            
+            // 添加选项按钮
+            function addOption(option) {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option.text;
+                
+                button.addEventListener('click', function() {
+                    // 记录选择的选项文本
+                    gameState.lastOptionText = option.text;
+                    
+                    // 清除任何现有的自动跳转计时器
+                    clearTimeout(window.autoNextTimer);
+                    
+                    // 直接跳转到下一个场景，不生成玩家消息
+                    loadScene(option.nextScene);
+                });
+                
+                optionsArea.appendChild(button);
+            }
+        }
+        
+        // 页面加载完成后初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
